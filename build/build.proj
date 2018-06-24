@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+         Sdk="Microsoft.NET.Sdk"
+         ToolsVersion="3.5"
+         DefaultTargets="default">
+	<PropertyGroup>
+		<root>$(MSBuildProjectDirectory)</root>
+		<SourceDir>$(root)\..\src</SourceDir>
+		<BinDir>$(root)\..\bin</BinDir>
+		<DistDir>$(root)\..\dist</DistDir>
+		<LibDir>$(root)\..\lib</LibDir>
+		<Configuration>Release</Configuration>
+		<Platform>Any CPU</Platform>
+		<BuildConfigurationProperties>Configuration=$(Configuration);Platform=$(Platform)</BuildConfigurationProperties>
+		<!-- MSBuildCommunityTasksPath>$(LibDir)\MSBuild.Community.Tasks.v1.4.0.42</MSBuildCommunityTasksPath -->
+		<TargetFramework>net45</TargetFramework>
+	</PropertyGroup>
+
+	<!-- Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" / -->
+
+	<ItemGroup>  
+		<PackageReference Include="ILMerge" Version="2.14.1208" />
+	</ItemGroup>
+
+	<Target Name="default" 
+            DependsOnTargets="Restore; CleanUp; DotRenderer; ILMerge;" />
+
+	<Target Name="CleanUp">   
+		<ItemGroup>
+			<BinFiles Include="$(BinDir)\**\*" />
+		</ItemGroup> 
+		<Delete Files="@(BinFiles)"
+                Condition = "Exists('$(BinDir)')" />
+		<MakeDir Directories = "$(BinDir)" 
+                 Condition = "!Exists('$(BinDir)')"/>
+		<MakeDir Directories = "$(DistDir)" 
+                 Condition = "!Exists('$(DistDir)')"/>
+		<!-- restoring from here creates "obj" here ... -->
+		<RemoveDir Directories="$(root)/obj"/>
+	</Target>
+
+	<Target Name="Contracts">
+		<MSBuild Projects="$(SourceDir)\Contracts\Contracts.sln" 
+               Properties="$(BuildConfigurationProperties)"
+			   Targets="Restore;Build" />
+	</Target>
+	<Target Name="Crawler"
+           DependsOnTargets="Contracts;">
+		<MSBuild Projects="$(SourceDir)\Crawler\Crawler.sln" 
+               Properties="$(BuildConfigurationProperties)"
+			   Targets="Restore;Build" />
+	</Target>
+	<Target Name="DotRenderer.Build"
+           DependsOnTargets="Contracts; Crawler;">
+		<MSBuild Projects="$(SourceDir)\DotRenderer\DotRenderer.sln" 
+               Properties="$(BuildConfigurationProperties)"
+			   Targets="Restore;Build" />
+	</Target>
+	<Target Name="DotRenderer"
+			DependsOnTargets="DotRenderer.Build;">>
+		<Exec Command="$(LibDir)/packages/ilmerge/2.14.1208/tools/ILMerge.exe /lib:$(BinDir) /wildcards /out:$(DistDir)/ComponentDetective.DotRenderer.exe ComponentDetective.DotRender.exe *.dll" />
+	</Target>
+</Project>
