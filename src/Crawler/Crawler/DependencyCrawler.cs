@@ -25,7 +25,7 @@ namespace Crawler
             {
                 Solutions = (new SolutionParser()).ParseAll(slns),
                 Projects = parsedProjects,
-                References = parsedProjects.SelectMany(p => p.References).Distinct(new LibraryReferenceComparer())
+                References = parsedProjects.SelectMany(p => p.LibraryReferences).Distinct(new LibraryReferenceComparer())
             };
         }
     }

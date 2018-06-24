@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Render
 {
@@ -57,6 +58,9 @@ namespace Render
 
         private static string GenerateDotFile(IComponentOverview input)
         {
+            var excludes = new[] { "^System$", "^System\\..*", "^Microsoft\\..*" };
+            var excludeExpression = new Regex(string.Join("|", excludes.Select(x => $"({x})")), RegexOptions.Compiled);
+
             var solutions = input.Solutions.ToList();
             var projects = input.Projects.ToList();
             var libraries = input.References.ToList();
@@ -78,6 +82,11 @@ namespace Render
             }
             foreach (var lib in libraries)
             {
+                if (excludeExpression.IsMatch(lib.Name))
+                {
+                    continue;
+                }
+
                 var libName = lib.Name;
                 if (libName.Contains(","))
                 {
@@ -91,7 +100,7 @@ namespace Render
                         libName = parts[0].Trim();
                     }
                 }
-                sb.AppendLine($" {lib.GetId()} [shape=octagon label=\"{libName.Replace("\\", "\\\\")}\"]");
+                sb.AppendLine($" {lib.GetId()} [shape=ellipse label=\"{libName.Replace("\\", "\\\\")}\"]");
             }
             sb.AppendLine("}");
 
@@ -105,8 +114,16 @@ namespace Render
             }
             foreach (var proj in projects)
             {
-                foreach (var r in proj.References)
+                foreach (var p in proj.ProjectReferences)
                 {
+                    sb.AppendLine($"{proj.GetId()} -> {p.GetId()}");
+                }
+                foreach (var r in proj.LibraryReferences)
+                {
+                    if (excludeExpression.IsMatch(r.Name))
+                    {
+                        continue;
+                    }
                     sb.AppendLine($"{proj.GetId()} -> {r.GetId()}");
                 }
             }

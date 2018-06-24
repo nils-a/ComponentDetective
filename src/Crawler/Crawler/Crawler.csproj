@@ -51,12 +51,15 @@
     </Compile>
     <Compile Include="Comparer\LibraryReferenceComparer.cs" />
     <Compile Include="DependencyCrawler.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Models\ComponentOverview.cs" />
     <Compile Include="Models\LibraryReference.cs" />
     <Compile Include="Models\ProjectInformation.cs" />
     <Compile Include="Models\ProjectReference.cs" />
     <Compile Include="Models\SolutionInformation.cs" />
     <Compile Include="ProjectParser.cs" />
+    <Compile Include="ProjectParsers\CsProjParser.cs" />
+    <Compile Include="ProjectParsers\IProjParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SolutionParser.cs" />
   </ItemGroup>

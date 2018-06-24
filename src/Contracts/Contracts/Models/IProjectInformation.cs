@@ -8,6 +8,10 @@ namespace Contracts.Models
 
         string Path { get; }
 
-        IEnumerable<ILibraryReference> References { get; }
+        IEnumerable<ILibraryReference> LibraryReferences { get; }
+
+        IEnumerable<IProjectReference> ProjectReferences { get; }
+
+        IEnumerable<string> OutputPaths { get; }
     }
 }

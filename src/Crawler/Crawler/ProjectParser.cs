@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
+using ComponentDetective.Crawler.Extensions;
+using ComponentDetective.Crawler.ProjectParsers;
 using Crawler.Models;
 
 namespace Crawler
@@ -14,21 +13,25 @@ namespace Crawler
         internal IEnumerable<ProjectInformation> ParseAll(string[] projs)
         {
             var result = new List<ProjectInformation>();
+
+            var parsers = new Dictionary<string, IProjParser>
+            {
+                { "csproj", new CsProjParser() }
+            };
+
             foreach (var proj in projs)
             {
                 try
                 {
                     var fullPath = Path.GetFullPath(proj);
-                    var extension = Path.GetExtension(fullPath).Substring(1).ToUpperInvariant();
-                    switch (extension)
+                    var extension = Path.GetExtension(fullPath).Substring(1).ToLowerInvariant();
+                    if (!parsers.TryGetValue(extension, out IProjParser parser))
                     {
-                        case "CSPROJ":
-                            result.Add(ParseCsProj(fullPath));
-                            break;
-                        default:
-                            //logging??
-                            break;
+                        //logging??
+                        continue;
                     }
+
+                    result.Add(parser.Parse(proj));
                 }
                 catch
                 {
@@ -36,44 +39,51 @@ namespace Crawler
                     continue;
                 }
             }
-            return result;
-        }
 
-        private ProjectInformation ParseCsProj(string fullPath)
-        {
-            XDocument xml;
-            using(var s = new StreamReader(fullPath))
+            // now, if projects were referencened by out-path, they are in Library-References and not in proejct-references...
+            var pathLookup = result.SelectMany(x => x.OutputPaths.Select(y => new { Path=y, Proj=x })).ToDictionary(x => x.Path, y => y.Proj);
+            foreach(var p in result)
             {
-                xml = XDocument.Load(s);
-            }
-
-            var namespaceManager = new XmlNamespaceManager(new NameTable());
-            namespaceManager.AddNamespace("x", "http://schemas.microsoft.com/developer/msbuild/2003");
-
-            var references = new List<LibraryReference>();
-            foreach (var elm in xml.XPathSelectElements("//x:Reference", namespaceManager))
-            {
-                var inc = elm.Attribute("Include").Value;
-                var hintElm = elm.Descendants("HintPath").FirstOrDefault();
-                var hintPath = string.Empty;
-                if(hintElm != null)
+                var libRefs = p.LibraryReferences.ToList();
+                var projRefs = p.ProjectReferences.ToList();
+                var modified = false;
+                foreach(var libRef in libRefs.ToList())
                 {
-                    hintPath = hintElm.Value;
+                    if (string.IsNullOrEmpty(libRef.HintPath))
+                    {
+                        continue;
+                    }
+
+                    if(!pathLookup.TryGetValue(libRef.HintPath, out var projectInformation))
+                    {
+                        continue;
+                    }
+
+                    // we found a lib-ref that's actually a known project...
+                    modified = true;
+                    libRefs.Remove(libRef);
+
+                    //libref-name is a full assembly-name, and projectref-name is the name the project has in the sln. So let's make something up...
+                    var name = libRef.Name;
+                    if(name.Contains(",", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        name = name.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries)[0];
+                    }
+
+                    projRefs.Add(new ProjectReference
+                    {
+                        Name = name,
+                        Path = projectInformation.Path
+                    });
                 }
 
-                references.Add(new LibraryReference
+                if (modified)
                 {
-                    Name = inc,
-                    HintPath = hintPath
-                });
+                    p.LibraryReferences = libRefs;
+                    p.ProjectReferences = projRefs;
+                }
             }
-
-            return new ProjectInformation
-            {
-                Type = Contracts.Models.ProjectType.CsProj,
-                Path = fullPath,
-                References = references
-            };
+            return result;
         }
     }
 }

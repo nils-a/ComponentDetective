@@ -9,7 +9,11 @@ namespace Crawler.Models
 
         public string Path { get; internal set; }
 
-        internal IEnumerable<LibraryReference> References { get; set; }
-        IEnumerable<ILibraryReference> IProjectInformation.References { get { return References; } }
+        public IEnumerable<string> OutputPaths { get; internal set; }
+
+        public IEnumerable<IProjectReference> ProjectReferences { get; internal set; }
+
+        internal IEnumerable<LibraryReference> LibraryReferences { get; set; }
+        IEnumerable<ILibraryReference> IProjectInformation.LibraryReferences { get { return LibraryReferences; } }
     }
 }

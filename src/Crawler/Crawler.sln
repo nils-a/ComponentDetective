@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2018
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crawler", "Crawler\Crawler.csproj", "{1EDFE3B0-CB43-4545-8BB0-C2EC18279EA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crawler.Tests", "Crawler.Tests\Crawler.Tests.csproj", "{40169FB1-8523-41FD-96EE-FE1FC8A10E34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{1EDFE3B0-CB43-4545-8BB0-C2EC18279EA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1EDFE3B0-CB43-4545-8BB0-C2EC18279EA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1EDFE3B0-CB43-4545-8BB0-C2EC18279EA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40169FB1-8523-41FD-96EE-FE1FC8A10E34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40169FB1-8523-41FD-96EE-FE1FC8A10E34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40169FB1-8523-41FD-96EE-FE1FC8A10E34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40169FB1-8523-41FD-96EE-FE1FC8A10E34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
