@@ -1,7 +1,9 @@
 ﻿using ComponentDetective.DotRenderer.Extensions;
 using Contracts.Models;
 using Crawler;
+using NDesk.Options;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,32 +15,65 @@ namespace Render
     {
         static int Main(string[] args)
         {
-            if (args.Length < 1 || args.Length > 2)
+            var showHelp = false;
+            var startFolder = string.Empty;
+            var targetFile = string.Empty;
+            var appName = Path.GetFileName(typeof(Program).Assembly.Location);
+
+            var p = new OptionSet() {
+                { "f|folder=", "the {FOLDER} to start the crawl.",
+                   f => startFolder = f },
+                { "t|target=", "the {TARGET} to write the dot into",
+                    t => targetFile = t },
+                { "h|help",  "show this message and exit",
+                   v => showHelp = v != null },
+            };
+
+            List<string> extra;
+            try
             {
-                Console.Error.WriteLine($"Call {typeof(Program).Assembly.Location} with infolder as first and optional output as second param.");
+                extra = p.Parse(args);
+            }
+            catch (OptionException e)
+            {
+                Console.Error.WriteLine($"{appName}: {e.Message}");
+                Console.Error.WriteLine($"Try '{appName} --help' for more information.");
                 return 99;
             }
 
-            if (!Directory.Exists(args[0]))
+            if (showHelp)
             {
-                Console.Error.WriteLine($"The folder {args[0]} does not exist.");
+                p.WriteOptionDescriptions(Console.Out);
+                return 0;
+            }
+
+            if (string.IsNullOrEmpty(startFolder))
+            {
+                Console.Error.WriteLine($"folder is needed.");
+                Console.Error.WriteLine($"Try '{appName} --help' for more information.");
                 return 99;
             }
 
-            if (args.Length > 1 && File.Exists(args[1]))
+            if (!Directory.Exists(startFolder))
             {
-                Console.Error.WriteLine($"The output-file {args[1]} already exist.");
+                Console.Error.WriteLine($"The folder {startFolder} does not exist.");
+                return 99;
+            }
+
+            if (!string.IsNullOrEmpty(targetFile) && File.Exists(targetFile))
+            {
+                Console.Error.WriteLine($"The output-file {targetFile} already exist.");
                 return 99;
             }
 
             var crawler = new DependencyCrawler();
-            var result =  crawler.Crawl(args[0]);
+            var result =  crawler.Crawl(startFolder);
             var dot = GenerateDotFile(result);
 
             TextWriter output;
-            if (args.Length > 1)
+            if (!string.IsNullOrEmpty(targetFile))
             {
-                output = new StreamWriter(args[1], false, Encoding.Unicode);
+                output = new StreamWriter(targetFile, false, Encoding.Unicode);
             }
             else
             {
@@ -50,9 +85,6 @@ namespace Render
                 output.Write(dot);
             }
 
-#if DEBUG
-            Console.ReadKey();
-#endif
             return 0;
         }
 
