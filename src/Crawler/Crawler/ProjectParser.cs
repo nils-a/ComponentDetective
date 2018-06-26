@@ -5,6 +5,7 @@ using System.Linq;
 using ComponentDetective.Contracts;
 using ComponentDetective.Crawler.Extensions;
 using ComponentDetective.Crawler.ProjectParsers;
+using Contracts.Models;
 using Crawler.Models;
 
 namespace Crawler
@@ -24,7 +25,8 @@ namespace Crawler
 
             var parsers = new Dictionary<string, IProjParser>
             {
-                { "csproj", new CsProjParser(logger) }
+                { "csproj", new MsBuildParser(logger, ProjectType.CsProj) },
+                { "vbproj", new MsBuildParser(logger, ProjectType.VbProj) }
             };
 
             foreach (var proj in projs)
@@ -50,7 +52,7 @@ namespace Crawler
             }
 
             // now, if projects were referencened by out-path, they are in Library-References and not in proejct-references...
-            var pathLookup = result.SelectMany(x => x.OutputPaths.Select(y => new { Path=y, Proj=x })).ToDictionary(x => x.Path, y => y.Proj);
+            var grouping = result.SelectMany(x => x.OutputPaths.Select(y => new { Path = y, Proj = x })).ToLookup(g => g.Path, p => p.Proj);
             foreach(var p in result)
             {
                 var libRefs = p.LibraryReferences.ToList();
@@ -63,9 +65,18 @@ namespace Crawler
                         continue;
                     }
 
-                    if(!pathLookup.TryGetValue(libRef.HintPath, out var projectInformation))
+                    var projects = grouping[libRef.HintPath].ToList();
+
+                    if(projects.Count == 0)
                     {
                         continue;
+                    }
+
+                    var projectInformation = projects[0];
+
+                    if(projects.Count > 1)
+                    {
+                        logger.Error($"Mutiple projects use the same output-path ({libRef}). This leads to possibly incorrect project-references!");
                     }
 
                     // we found a lib-ref that's actually a known project...

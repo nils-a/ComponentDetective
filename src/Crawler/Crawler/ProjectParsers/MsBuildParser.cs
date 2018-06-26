@@ -10,14 +10,16 @@ using Crawler.Models;
 
 namespace ComponentDetective.Crawler.ProjectParsers
 {
-    internal class CsProjParser : IProjParser
+    internal class MsBuildParser : IProjParser
     {
         const string xmlns = "http://schemas.microsoft.com/developer/msbuild/2003";
         private readonly ILogger logger;
+        private readonly ProjectType type;
 
-        public CsProjParser(ILogger logger)
+        public MsBuildParser(ILogger logger, ProjectType type)
         {
             this.logger = logger;
+            this.type = type;
         }
 
         public ProjectInformation Parse(string projFilePath)
@@ -32,7 +34,7 @@ namespace ComponentDetective.Crawler.ProjectParsers
 
             return new ProjectInformation
             {
-                Type = ProjectType.CsProj,
+                Type = type,
                 Path = Path.GetFullPath(projFilePath),
                 LibraryReferences = GetLibraryReferences(xml, projDir),
                 OutputPaths = GetOutPaths(xml, projDir),
@@ -97,6 +99,9 @@ namespace ComponentDetective.Crawler.ProjectParsers
                     extension = "dll";
                     break;
                 case "exe":
+                    extension = "exe";
+                    break;
+                case "winexe":
                     extension = "exe";
                     break;
                 default:
