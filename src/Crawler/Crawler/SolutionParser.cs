@@ -2,17 +2,26 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using ComponentDetective.Contracts;
 using Crawler.Models;
 
 namespace Crawler
 {
     internal class SolutionParser
     {
+        private ILogger logger;
+
+        public SolutionParser(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         internal IEnumerable<SolutionInformation> ParseAll(string[] slns)
         {
             var result = new List<SolutionInformation>();
             foreach(var sln in slns)
             {
+                logger.Verbose($"Parsing Solution: {sln}");
                 try
                 {
                     var fullPath = Path.GetFullPath(sln);
@@ -23,9 +32,9 @@ namespace Crawler
                         Projects = ParseProjects(fullPath)
                     });
                 }
-                catch
+                catch(Exception e)
                 {
-                    // lgging?
+                    logger.Error($"{e.GetType().Name} while parsing {sln}. Skipping!", e);
                 }
             }
 

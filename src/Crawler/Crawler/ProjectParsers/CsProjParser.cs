@@ -4,6 +4,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using ComponentDetective.Contracts;
 using Contracts.Models;
 using Crawler.Models;
 
@@ -12,6 +13,12 @@ namespace ComponentDetective.Crawler.ProjectParsers
     internal class CsProjParser : IProjParser
     {
         const string xmlns = "http://schemas.microsoft.com/developer/msbuild/2003";
+        private readonly ILogger logger;
+
+        public CsProjParser(ILogger logger)
+        {
+            this.logger = logger;
+        }
 
         public ProjectInformation Parse(string projFilePath)
         {
@@ -93,7 +100,7 @@ namespace ComponentDetective.Crawler.ProjectParsers
                     extension = "exe";
                     break;
                 default:
-                    // LOG??
+                    logger.Error($"Output-Type {outType} is unknown. Project will NOT HAVE a correct out-path!");
                     break;
             }
 

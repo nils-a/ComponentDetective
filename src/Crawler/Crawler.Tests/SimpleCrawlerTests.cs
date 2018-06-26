@@ -1,6 +1,7 @@
 ﻿using ComponentDetective.Contracts;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NSubstitute;
 using System;
 using System.IO;
 using System.Linq;
@@ -13,8 +14,9 @@ namespace Crawler.Tests
         [TestMethod]
         public void CrawlingThisStructure_GetsNoErrors()
         {
+            var logger = Substitute.For<ILogger>();
             var thisProjectbasePath = Path.Combine(GetProjectDir(), "../../..");
-            var sut = new DependencyCrawler();
+            var sut = new DependencyCrawler(logger);
             var result = sut.Crawl(thisProjectbasePath);
 
             var thisSolution = Path.GetFileNameWithoutExtension(Directory.GetFiles(Path.Combine(GetProjectDir(), "../"), "*.sln").Single());
@@ -40,11 +42,12 @@ namespace Crawler.Tests
         [TestMethod]
         public void CrawlingThisStructure_CrawlerReferencesContractsAsProjectRef()
         {
+            var logger = Substitute.For<ILogger>();
             var thisProjectbasePath = Path.Combine(GetProjectDir(), "../../..");
             var crawlerProjectPath = Path.GetFullPath(Path.Combine(GetProjectDir(), "../Crawler/Crawler.csproj"));
             File.Exists(crawlerProjectPath).Should().BeTrue("It's a prerequisite this project exists");
 
-            var sut = new DependencyCrawler();
+            var sut = new DependencyCrawler(logger);
             var actual = sut.Crawl(thisProjectbasePath);
 
             var crawlerProj = actual.Projects.Single(x => x.Path.Equals(crawlerProjectPath, StringComparison.InvariantCultureIgnoreCase));

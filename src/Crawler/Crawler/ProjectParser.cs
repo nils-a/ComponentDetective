@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ComponentDetective.Contracts;
 using ComponentDetective.Crawler.Extensions;
 using ComponentDetective.Crawler.ProjectParsers;
 using Crawler.Models;
@@ -10,32 +11,40 @@ namespace Crawler
 {
     internal class ProjectParser
     {
+        private readonly ILogger logger;
+
+        public ProjectParser(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         internal IEnumerable<ProjectInformation> ParseAll(string[] projs)
         {
             var result = new List<ProjectInformation>();
 
             var parsers = new Dictionary<string, IProjParser>
             {
-                { "csproj", new CsProjParser() }
+                { "csproj", new CsProjParser(logger) }
             };
 
             foreach (var proj in projs)
             {
+                logger.Verbose($"Parsing project:{proj}");
                 try
                 {
                     var fullPath = Path.GetFullPath(proj);
                     var extension = Path.GetExtension(fullPath).Substring(1).ToLowerInvariant();
                     if (!parsers.TryGetValue(extension, out IProjParser parser))
                     {
-                        //logging??
+                        logger.Error($"No Parser for a project-type:{extension}. Skipping {proj}");
                         continue;
                     }
 
                     result.Add(parser.Parse(proj));
                 }
-                catch
+                catch(Exception e)
                 {
-                    //logging?
+                    logger.Error($"{e.GetType().Name} while parsing {proj}. Skipping.", e);
                     continue;
                 }
             }
@@ -61,6 +70,7 @@ namespace Crawler
 
                     // we found a lib-ref that's actually a known project...
                     modified = true;
+                    logger.Verbose($"Found a library-reference to {libRef.HintPath}, which is actually a project ({projectInformation.Path})");
                     libRefs.Remove(libRef);
 
                     //libref-name is a full assembly-name, and projectref-name is the name the project has in the sln. So let's make something up...

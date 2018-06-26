@@ -1,4 +1,5 @@
-﻿using ComponentDetective.DotRenderer.Extensions;
+﻿using ComponentDetective.DotRender;
+using ComponentDetective.DotRenderer.Extensions;
 using Contracts.Models;
 using Crawler;
 using NDesk.Options;
@@ -16,6 +17,7 @@ namespace Render
         static int Main(string[] args)
         {
             var showHelp = false;
+            var verbose = false;
             var startFolder = string.Empty;
             var targetFile = string.Empty;
             var appName = Path.GetFileName(typeof(Program).Assembly.Location);
@@ -25,8 +27,10 @@ namespace Render
                    f => startFolder = f },
                 { "t|target=", "the {TARGET} to write the dot into",
                     t => targetFile = t },
+                { "v|verbose",  "print verbose messages",
+                   v => verbose = v != null },
                 { "h|help",  "show this message and exit",
-                   v => showHelp = v != null },
+                   h => showHelp = h != null },
             };
 
             List<string> extra;
@@ -65,8 +69,8 @@ namespace Render
                 Console.Error.WriteLine($"The output-file {targetFile} already exist.");
                 return 99;
             }
-
-            var crawler = new DependencyCrawler();
+            var logger = new ConsoleLogger(verbose);
+            var crawler = new DependencyCrawler(logger);
             var result =  crawler.Crawl(startFolder);
             var dot = GenerateDotFile(result);
 
@@ -78,6 +82,7 @@ namespace Render
             else
             {
                 output = Console.Out;
+                logger.Verbose("Output:");
             }
 
             using (output)
