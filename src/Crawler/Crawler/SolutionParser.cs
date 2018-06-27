@@ -3,24 +3,33 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using ComponentDetective.Contracts;
-using Crawler.Models;
+using ComponentDetective.Crawler.Extensions;
+using ComponentDetective.Crawler.Models;
 
-namespace Crawler
+namespace ComponentDetective.Crawler
 {
     internal class SolutionParser
     {
         private ILogger logger;
+        private readonly ICrawlerSettings settings;
 
-        public SolutionParser(ILogger logger)
+        public SolutionParser(ILogger logger, ICrawlerSettings settings)
         {
             this.logger = logger;
+            this.settings = settings;
         }
 
         internal IEnumerable<SolutionInformation> ParseAll(string[] slns)
         {
             var result = new List<SolutionInformation>();
-            foreach(var sln in slns)
+
+            foreach (var sln in slns)
             {
+                if(settings.PathExcludesRegex.IsMatch(sln))
+                {
+                    logger.Verbose($"Skipping: {sln}: Exclude by path");
+                    continue;
+                }
                 logger.Verbose($"Parsing Solution: {sln}");
                 try
                 {

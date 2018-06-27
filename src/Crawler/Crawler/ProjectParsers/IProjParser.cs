@@ -1,4 +1,4 @@
-﻿using Crawler.Models;
+﻿using ComponentDetective.Crawler.Models;
 
 namespace ComponentDetective.Crawler.ProjectParsers
 {

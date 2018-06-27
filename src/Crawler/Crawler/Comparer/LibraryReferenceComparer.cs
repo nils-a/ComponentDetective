@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Crawler.Models;
+using ComponentDetective.Crawler.Models;
 
-namespace Crawler.Comparer
+namespace ComponentDetective.Crawler.Comparer
 {
     internal class LibraryReferenceComparer : IEqualityComparer<LibraryReference>
     {

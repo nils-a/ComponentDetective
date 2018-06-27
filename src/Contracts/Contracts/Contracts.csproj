@@ -46,6 +46,7 @@
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ICrawler.cs" />
+    <Compile Include="ICrawlerSettings.cs" />
     <Compile Include="Interface.cs" />
     <Compile Include="Models\IComponentOverview.cs" />
     <Compile Include="Models\ILibraryReference.cs" />

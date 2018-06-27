@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace Crawler.Tests
+namespace ComponentDetective.Crawler.Tests
 {
     [TestClass]
     public class SimpleCrawlerTests

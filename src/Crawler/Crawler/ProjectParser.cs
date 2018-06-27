@@ -2,21 +2,24 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ComponentDetective.Contracts;
 using ComponentDetective.Crawler.Extensions;
 using ComponentDetective.Crawler.ProjectParsers;
 using Contracts.Models;
-using Crawler.Models;
+using ComponentDetective.Crawler.Models;
 
-namespace Crawler
+namespace ComponentDetective.Crawler
 {
     internal class ProjectParser
     {
         private readonly ILogger logger;
+        private readonly ICrawlerSettings settings;
 
-        public ProjectParser(ILogger logger)
+        public ProjectParser(ILogger logger, ICrawlerSettings settings)
         {
             this.logger = logger;
+            this.settings = settings;
         }
 
         internal IEnumerable<ProjectInformation> ParseAll(string[] projs)
@@ -25,12 +28,18 @@ namespace Crawler
 
             var parsers = new Dictionary<string, IProjParser>
             {
-                { "csproj", new MsBuildParser(logger, ProjectType.CsProj) },
-                { "vbproj", new MsBuildParser(logger, ProjectType.VbProj) }
+                { "csproj", new MsBuildParser(logger, settings, ProjectType.CsProj) },
+                { "vbproj", new MsBuildParser(logger, settings, ProjectType.VbProj) }
             };
 
             foreach (var proj in projs)
             {
+                if (settings.PathExcludesRegex.IsMatch(proj))
+                {
+                    logger.Verbose($"Skipping: {proj}: Exclude by path.");
+                    continue;
+                }
+
                 logger.Verbose($"Parsing project:{proj}");
                 try
                 {

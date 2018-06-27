@@ -1,8 +1,8 @@
-﻿using ComponentDetective.DotRender;
+﻿using ComponentDetective.Crawler;
+using ComponentDetective.DotRender;
 using ComponentDetective.DotRenderer.Extensions;
 using Contracts.Models;
-using Crawler;
-using NDesk.Options;
+using Mono.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Render
+namespace ComponentDetective.Render
 {
     class Program
     {
@@ -25,7 +25,7 @@ namespace Render
             var p = new OptionSet() {
                 { "f|folder=", "the {FOLDER} to start the crawl.",
                    f => startFolder = f },
-                { "t|target=", "the {TARGET} to write the dot into",
+                { "t|target", "the {TARGET} to write the dot into",
                     t => targetFile = t },
                 { "v|verbose",  "print verbose messages",
                    v => verbose = v != null },
@@ -70,7 +70,8 @@ namespace Render
                 return 99;
             }
             var logger = new ConsoleLogger(verbose);
-            var crawler = new DependencyCrawler(logger);
+            var settings = new CrawlerSettings();
+            var crawler = new DependencyCrawler(logger, settings);
             var result =  crawler.Crawl(startFolder);
             var dot = GenerateDotFile(result);
 
@@ -95,9 +96,6 @@ namespace Render
 
         private static string GenerateDotFile(IComponentOverview input)
         {
-            var excludes = new[] { "^System$", "^System\\..*", "^Microsoft\\..*" };
-            var excludeExpression = new Regex(string.Join("|", excludes.Select(x => $"({x})")), RegexOptions.Compiled);
-
             var solutions = input.Solutions.ToList();
             var projects = input.Projects.ToList();
             var libraries = input.References.ToList();
@@ -119,11 +117,6 @@ namespace Render
             }
             foreach (var lib in libraries)
             {
-                if (excludeExpression.IsMatch(lib.Name))
-                {
-                    continue;
-                }
-
                 var libName = lib.Name;
                 if (libName.Contains(","))
                 {
@@ -157,10 +150,6 @@ namespace Render
                 }
                 foreach (var r in proj.LibraryReferences)
                 {
-                    if (excludeExpression.IsMatch(r.Name))
-                    {
-                        continue;
-                    }
                     sb.AppendLine($"{proj.GetId()} -> {r.GetId()}");
                 }
             }

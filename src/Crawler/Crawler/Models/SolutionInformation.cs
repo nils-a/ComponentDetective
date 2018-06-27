@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Contracts.Models;
 
-namespace Crawler.Models
+namespace ComponentDetective.Crawler.Models
 {
     internal class SolutionInformation : ISolutionInformation
     {

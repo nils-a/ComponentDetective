@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using ComponentDetective.Contracts;
 using Contracts.Models;
-using Crawler.Models;
+using ComponentDetective.Crawler.Models;
+using ComponentDetective.Crawler.Extensions;
 
 namespace ComponentDetective.Crawler.ProjectParsers
 {
@@ -14,11 +16,13 @@ namespace ComponentDetective.Crawler.ProjectParsers
     {
         const string xmlns = "http://schemas.microsoft.com/developer/msbuild/2003";
         private readonly ILogger logger;
+        private readonly ICrawlerSettings settings;
         private readonly ProjectType type;
 
-        public MsBuildParser(ILogger logger, ProjectType type)
+        public MsBuildParser(ILogger logger, ICrawlerSettings settings, ProjectType type)
         {
             this.logger = logger;
+            this.settings = settings;
             this.type = type;
         }
 
@@ -124,6 +128,13 @@ namespace ComponentDetective.Crawler.ProjectParsers
             foreach (var elm in xml.XPathSelectElements("//x:Reference", namespaceManager))
             {
                 var inc = elm.Attribute("Include").Value;
+
+                if (settings.LibraryNameExcludesRegex.IsMatch(inc))
+                {
+                    logger.Verbose($"Skipping {inc}: Exclude by name.");
+                    continue;
+                }
+
                 var hintElm = elm.Descendants(XName.Get("HintPath", xmlns)).FirstOrDefault();
                 var hintPath = string.Empty;
                 if (hintElm != null)
