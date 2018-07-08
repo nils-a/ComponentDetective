@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<Target Name="default" 
-            DependsOnTargets="Restore; CleanUp; DotRenderer; ILMerge;" />
+            DependsOnTargets="Restore; CleanUp; DotRenderer;" />
 
 	<Target Name="CleanUp">   
 		<ItemGroup>
@@ -50,14 +50,14 @@
                Properties="$(BuildConfigurationProperties)"
 			   Targets="Restore;Build" />
 	</Target>
-	<Target Name="DotRenderer.Build"
+	<Target Name="DotRenderer-Build"
            DependsOnTargets="Contracts; Crawler;">
 		<MSBuild Projects="$(SourceDir)\DotRenderer\DotRenderer.sln" 
                Properties="$(BuildConfigurationProperties)"
 			   Targets="Restore;Build" />
 	</Target>
 	<Target Name="DotRenderer"
-			DependsOnTargets="DotRenderer.Build;">>
+			DependsOnTargets="DotRenderer-Build;">
 		<Exec Command="$(LibDir)/packages/ilmerge/2.14.1208/tools/ILMerge.exe /lib:$(BinDir) /wildcards /out:$(DistDir)/ComponentDetective.DotRenderer.exe ComponentDetective.DotRender.exe *.dll" />
 	</Target>
 </Project>
